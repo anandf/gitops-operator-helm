@@ -1,0 +1,102 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gitops-operator.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "gitops-operator.labels" . | indent 4 }}
+{{- with .Values.extraLabels }}
+{{ . | toYaml | indent 4 }}
+{{- end }}
+spec:
+  selector:
+    matchLabels:
+{{ include "gitops-operator.labels" . | indent 6 }}
+  replicas: 1
+  template:
+    metadata:
+      name: {{ include "gitops-operator.fullname" . }}
+      labels:
+{{ include "gitops-operator.labels" . | indent 8 }}
+{{- with .Values.extraLabels }}
+{{ . | toYaml | indent 8 }}
+{{- end }}
+    spec:
+      securityContext:
+        runAsNonRoot: true
+      containers:
+        - command:
+            - /manager
+          args:
+          {{- if .Values.controllerManager.leaderElectionEnabled }}
+            - --leader-elect
+          {{- end }}
+          {{- if .Values.controllerManager.authProxyEnabled }}
+            - "--health-probe-bind-address=:8081"
+            - "--metrics-bind-address=127.0.0.1:8080"
+          {{- end }}
+          name: {{ include "gitops-operator.fullname" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+          {{ toYaml .Values.resources | indent 12 }}
+          env:
+            - name: ARGOCD_CLUSTER_CONFIG_NAMESPACES
+              value: "openshift-gitops"
+            - name: OPERATOR_NAME
+              value: gitops-operator
+            - name: DISABLE_DEX
+              value: {{ .Values.components.dex.enabled }}
+            - name: DISABLE_DEFAULT_ARGOCD_INSTANCE
+              value: {{ .Values.defaultArgoCD.create }}
+            - name: ARGOCD_DEX_IMAGE
+              value: "{{ .Values.components.dex.imageRepository }}:{{ .Values.components.dex.imageTag }}"
+            - name: ARGOCD_KEYCLOAK_IMAGE
+              value: "{{ .Values.components.keycloak.imageRepository }}:{{ .Values.components.keycloak.imageTag }}"
+            - name: BACKEND_IMAGE
+              value: "{{ .Values.components.backend.imageRepository }}:{{ .Values.components.backend.imageTag }}"
+            - name: ARGOCD_IMAGE
+              value: "{{ .Values.components.argocd.imageRepository }}:{{ .Values.components.argocd.imageTag }}"
+            - name: ARGOCD_REPOSERVER_IMAGE
+              value: "{{ .Values.components.argocd.imageRepository }}:{{ .Values.components.argocd.imageTag }}"
+            - name: ARGOCD_REDIS_IMAGE
+              value: "{{ .Values.components.redis.imageRepository }}:{{ .Values.components.redis.imageTag }}"
+            - name: ARGOCD_REDIS_HA_IMAGE
+              value: "{{ .Values.components.redis.imageRepository }}:{{ .Values.components.redis.imageTag }}"
+            - name: ARGOCD_REDIS_HA_PROXY_IMAGE
+              value: "{{ .Values.components.redisProxy.imageRepository }}:{{ .Values.components.redisProxy.imageTag }}"
+            - name: GITOPS_CONSOLE_PLUGIN_IMAGE
+              value: "{{ .Values.components.consolePlugin.imageRepository }}:{{ .Values.components.consolePlugin.imageTag }}"
+            - name: KAM_IMAGE
+              value: "{{ .Values.components.kam.imageRepository }}:{{ .Values.components.kam.imageTag }}"
+      {{- if .Values.controllerManager.authProxyEnabled }}
+        - name: kube-rbac-proxy
+          image: "{{ .Values.components.rbacProxy.imageRepository }}:{{ .Values.components.rbacProxy.imageTag }}"
+          args:
+          - "--secure-listen-address=0.0.0.0:8443"
+          - "--upstream=http://127.0.0.1:8080/"
+          - "--logtostderr=true"
+          - "--v=10"
+          ports:
+          - containerPort: 8443
+            name: https
+      {{- end }}
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ include "gitops-operator.serviceAccountName" . }}
+      {{- end }}
+      terminationGracePeriodSeconds: 10

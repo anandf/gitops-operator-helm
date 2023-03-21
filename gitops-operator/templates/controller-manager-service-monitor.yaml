@@ -1,0 +1,19 @@
+# Prometheus Monitor Service (Metrics)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+{{ include "gitops-operator.labels" . | indent 4 }}
+  name: controller-manager-metrics-monitor
+  namespace: {{ .Release.Namespace }} 
+spec:
+  endpoints:
+    - path: /metrics
+      port: https
+      scheme: https
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        insecureSkipVerify: {{ .Values.serviceMonitor.skipTLSVerify }}
+  selector:
+    matchLabels:
+{{ include "gitops-operator.labels" . | indent 6 }}
