@@ -1,6 +1,16 @@
 {{- if .Values.namespaces }}
 {{- range $ns := .Values.namespaces }}
 ---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ $ns }}
+  {{- if not $.Values.ignoreHelmHooks }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "5"
+  {{- end }}
+---
 apiVersion: argoproj.io/v1alpha1
 kind: ArgoCD
 metadata:

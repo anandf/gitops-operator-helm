@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: quay.io/redhat-developer/gitops-operator
+  repository: "quay.io/anjoseph/openshift-gitops-1-gitops-rhel8-operator"
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "v99.9.0-51"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -27,7 +27,8 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-extraLabels: {}
+extraLabels:
+  control-plane: argocd
 
 resources:
   {}
@@ -43,41 +44,40 @@ resources:
   #   memory: 128Mi
 
 serviceMonitor:
-  skipTLSVerify: true
+  skipTLSVerify: "true"
 defaultArgoCD:
-  create: true
+  create: "true"
 components:
   argocd:
-    imageRepository: ""
-    imageTag: ""
+    imageRepository: "registry.redhat.io/openshift-gitops-1/argocd-rhel8"
+    imageTag: "v1.8.0-23"
   backend:
-    imageRepository: ""
-    imageTag: ""
+    imageRepository: "brew.registry.redhat.io/openshift-gitops-1/gitops-rhel8"
+    imageTag: "v1.8.0-23"
   consolePlugin:
-    imageRepository: ""
-    imageTag: ""
+    imageRepository: "registry.redhat.io/openshift-gitops-1/console-plugin-rhel8"
+    imageTag: "v1.8.0-23"
   dex:
     enabled: false
-    imageRepository: ""
-    imageTag: ""
+    imageRepository: "registry.redhat.io/openshift-gitops-1/dex-rhel8"
+    imageTag: "v1.8.0-23"
   kam:
-    imageRepository: ""
-    imageTag: ""
+    imageRepository: "registry.redhat.io/openshift-gitops-1/kam-delivery-rhel8"
+    imageTag: "v1.8.0-23"
   keycloak:
-    imageRepository: ""
-    imageTag: ""
+    imageRepository: "registry.redhat.io/rh-sso-7/sso7-rhel8-operator"
+    imageTag: "7.6-8"
+  kubeRBACProxy:
+    imageRepository: "gcr.io/kubebuilder/kube-rbac-proxy"
+    imageTag: "v0.8.0"
   redis:
-    imageRepository: ""
-    imageTag: ""
+    imageRepository: "registry.redhat.io/rhel8/redis-6"
+    imageTag: "1-110"
   redisProxy:
-    imageRepository: ""
-    imageTag: ""
-  rbacProxy:
-    imageRepository: ""
-    imageTag: ""
+    imageRepository: "registry.redhat.io/openshift4/ose-haproxy-router"
+    imageTag: "v4.12.0-202302280915.p0.g3065f65.assembly.stream"
 
-namespaces:
-  - openshift-gitops
+namespaces: {}
 teamInstancesAreClusterScoped: true
 name: argocd
 ignoreHelmHooks: false

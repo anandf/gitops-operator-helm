@@ -1,6 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  labels:
-{{ include "gitops-operator.labels" . | indent 4 }}
-  name: {{ .Release.Namespace }}

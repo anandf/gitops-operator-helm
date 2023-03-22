@@ -61,9 +61,9 @@ spec:
             - name: OPERATOR_NAME
               value: gitops-operator
             - name: DISABLE_DEX
-              value: {{ .Values.components.dex.enabled }}
+              value: "false"
             - name: DISABLE_DEFAULT_ARGOCD_INSTANCE
-              value: {{ .Values.defaultArgoCD.create }}
+              value: "false"
             - name: ARGOCD_DEX_IMAGE
               value: "{{ .Values.components.dex.imageRepository }}:{{ .Values.components.dex.imageTag }}"
             - name: ARGOCD_KEYCLOAK_IMAGE
@@ -86,7 +86,7 @@ spec:
               value: "{{ .Values.components.kam.imageRepository }}:{{ .Values.components.kam.imageTag }}"
       {{- if .Values.controllerManager.authProxyEnabled }}
         - name: kube-rbac-proxy
-          image: "{{ .Values.components.rbacProxy.imageRepository }}:{{ .Values.components.rbacProxy.imageTag }}"
+          image: "{{ .Values.components.kubeRBACProxy.imageRepository }}:{{ .Values.components.kubeRBACProxy.imageTag }}"
           args:
           - "--secure-listen-address=0.0.0.0:8443"
           - "--upstream=http://127.0.0.1:8080/"
